@@ -1,0 +1,21 @@
+---
+#
+# Test Playbook
+#
+
+- hosts: localhost
+  connection: local
+  become: sudo
+  become_user: ubuntu
+  roles:
+    - role: ansible-mesos-dns
+      mesos_dns_install_mode: server
+      mesos_master_hosts:
+        - 127.0.0.1
+        - 127.0.0.2
+      zookeeper_hosts: 127.0.0.1:9191
+
+    - role: ansible-mesos-dns
+      mesos_dns_install_mode: client
+      mesos_dns_hosts:
+        - 127.0.0.1

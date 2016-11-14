@@ -1,0 +1,67 @@
+---
+- name: download mesos-dns
+  get_url: >
+    url='{{mesos_dns_url}}'
+    dest='{{installed_mesos_dns_app}}'
+    mode=0755
+    owner=root
+    group=root
+  when: mesos_dns_install_mode == 'server'
+
+- name: link
+  file: >
+    src='{{installed_mesos_dns_app}}'
+    dest='{{mesos_dns_target_dir}}/mesos-dns'
+    state=link
+  when: mesos_dns_install_mode == 'server'
+
+- name: create mesos-dns config directory
+  file: >
+    path={{mesos_dns_config_dir}}
+    state=directory
+    mode=0755
+    owner=root
+    group=root
+  when: mesos_dns_install_mode == 'server'
+
+- name: install config
+  register: mesos_dns_install_config
+  template: >
+    src='config.json.j2'
+    dest='{{mesos_dns_config_json}}'
+    mode=0644
+    owner=root
+    group=root
+  when: mesos_dns_install_mode == 'server'
+
+- name: install service
+  register: mesos_dns_service_install
+  template: >
+    src='mesos-dns.j2'
+    dest='/etc/init.d/mesos-dns'
+    owner=root
+    group=root
+    mode=0544
+  when: mesos_dns_install_mode == 'server'
+
+- name: systemctl daemon-reload
+  when: mesos_dns_service_install.changed and mesos_dns_install_mode == 'server'
+  command: update-rc.d mesos-dns defaults
+
+- name: launch mesos-dns
+  service: name=mesos-dns enabled=yes state=started
+  when: mesos_dns_install_mode == 'server'
+
+- name: restart mesos-dns
+  when: mesos_dns_install_config.changed and mesos_dns_install_mode == 'server'
+  service: name=mesos-dns enabled=yes state=restarted
+
+- name: delete mesos dns servers
+  when: mesos_dns_install_mode == 'client'
+  command: bash -c "sed -i '/\(.*\)mesos dns\(.*\)/d' /etc/resolv.conf"
+
+- name: update resolvconf
+  when: mesos_dns_install_mode == 'client'
+  command: bash -c "sed -i '1s/^/nameserver {{ item }} \# mesos dns \(DO NOT REMOVE THIS COMMENT\)\n/' /etc/resolv.conf"
+  with_items:
+    - "{{ mesos_dns_hosts }}"

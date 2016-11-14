@@ -1,0 +1,26 @@
+{
+    "zk": "zk://{{zookeeper_hosts}}/{{zookeeper_mesos_path}}",
+    "masters": [{% set comma = joiner(", ") %}{% for host in mesos_master_hosts %}{{ comma() }}"{{ host }}:{{ mesos_dns_mesos_master_port }}"{% endfor %}],
+    "refreshSeconds": {{mesos_dns_refreshSeconds | to_json}},
+    "ttl": {{mesos_dns_ttl | to_json}},
+    "domain": {{mesos_dns_domain | to_json}},
+    "port": {{mesos_dns_dnsport | to_json}},
+{% if mesos_dns_upstream_resolvers is defined %}
+    "resolvers": {{ mesos_dns_upstream_resolvers | to_json}},
+{% elif ansible_dns.nameservers is defined %}
+    "resolvers": {{ ansible_dns.nameservers | to_json}},
+{% endif %}
+    "timeout": {{ mesos_dns_timeout | to_json}},
+    "httpon": {{ mesos_dns_httpon | to_json}},
+    "dnson": {{mesos_dns_dnson | to_json}},
+    "httpport": {{mesos_dns_httpport | to_json}},
+    "externalon": {{mesos_dns_externalon | to_json}},
+    "listener": {{mesos_dns_listener | to_json}},
+    "SOAMname": {{mesos_dns_SOAMname | to_json}},
+    "SOARname": {{mesos_dns_SOARname | to_json}},
+    "SOARefresh": {{mesos_dns_SOARefresh | to_json}},
+    "SOARetry": {{mesos_dns_SOARetry | to_json}},
+    "SOAExpire":  {{mesos_dns_SOAExpire | to_json}},
+    "SOAMinttl": {{mesos_dns_SOAMinttl | to_json}},
+    "IPSources": {{mesos_dns_IPSources | to_json}}
+}
